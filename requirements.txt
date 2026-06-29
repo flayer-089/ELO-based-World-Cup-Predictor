@@ -1,0 +1,6 @@
+# Machine-learning goal model (Poisson regression) + its numeric backend.
+scikit-learn>=1.4
+numpy>=1.24
+# Optional: TLS root certificates for downloading the historical results CSV
+# on macOS Python builds that ship without a usable CA bundle.
+certifi
