@@ -38,6 +38,22 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+st.markdown(
+    """
+    <style>
+        /* Hide the GitHub and edit-pencil icons that Streamlit Community
+           Cloud adds to the top-right toolbar of every deployed app. */
+        [data-testid="stToolbarActions"] a[href*="github.com"],
+        [data-testid="stToolbarActions"] a[href*="githubusercontent"],
+        [data-testid="stAppGithubLink"],
+        [data-testid="stAppEditLink"] {
+            display: none !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 @st.cache_resource(show_spinner="Loading Elo ratings, training Poisson model, running 5,000 tournament sims…")
 def load_all():
