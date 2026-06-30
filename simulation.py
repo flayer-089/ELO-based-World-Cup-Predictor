@@ -68,34 +68,37 @@ def simulate_match(elo_a: float, elo_b: float) -> tuple[int, int]:
 
 
 def match_probabilities(elo_a: float, elo_b: float, trials: int = 50_000) -> dict:
-    """Monte Carlo win/draw/loss probabilities + xG + most likely scoreline."""
+    """Monte Carlo win/draw/loss probabilities + xG + most likely scoreline.
+
+    The "most likely score" is the unconditional modal scoreline — the single
+    (ga, gb) that showed up most across the simulation. This avoids the
+    earlier bias of always reporting the favourite's modal win (which is
+    almost always 1-0 for typical xG values, since P(1 goal) > P(2 goals) for
+    Poisson means in the 1.0-1.5 range). For two independent Poissons with
+    comparable means the joint mode is frequently tied between adjacent
+    scores (e.g. 1-0 vs 1-1), so the top-N score distribution is a more
+    reliable guide than this single number alone.
+    """
     xg_a, xg_b = expected_goals(elo_a, elo_b)
     win_a = draw = win_b = 0
-    # Track scorelines per outcome so the "most likely score" can reflect the
-    # favourite. The unconditional modal score is ~1-1 across a wide band of
-    # realistic xG (both 1-2 goals), since that's the joint mode of two
-    # independent Poissons — it hides which side is actually ahead.
-    score_freq: dict[str, dict[str, int]] = {"a": {}, "draw": {}, "b": {}}
+    score_freq: dict[str, int] = {}
 
     for _ in range(trials):
         ga = poisson_sample(xg_a)
         gb = poisson_sample(xg_b)
-        key = f"{ga}-{gb}"
         if ga > gb:
             win_a += 1
-            bucket = score_freq["a"]
         elif ga < gb:
             win_b += 1
-            bucket = score_freq["b"]
         else:
             draw += 1
-            bucket = score_freq["draw"]
-        bucket[key] = bucket.get(key, 0) + 1
+        key = f"{ga}-{gb}"
+        score_freq[key] = score_freq.get(key, 0) + 1
 
-    # Most likely scoreline *within the most likely outcome*.
-    outcome = max(("a", win_a), ("draw", draw), ("b", win_b), key=lambda kv: kv[1])[0]
-    bucket = score_freq[outcome]
-    most_likely = max(bucket.items(), key=lambda kv: kv[1])[0] if bucket else "1-1"
+    if score_freq:
+        most_likely_key, most_likely_count = max(score_freq.items(), key=lambda kv: kv[1])
+    else:
+        most_likely_key, most_likely_count = "1-1", 0
 
     return {
         "p_win_a": win_a / trials,
@@ -103,7 +106,8 @@ def match_probabilities(elo_a: float, elo_b: float, trials: int = 50_000) -> dic
         "p_win_b": win_b / trials,
         "xg_a": round(xg_a, 2),
         "xg_b": round(xg_b, 2),
-        "most_likely_score": most_likely,
+        "most_likely_score": most_likely_key,
+        "most_likely_score_p": most_likely_count / trials if trials else 0.0,
     }
 
 

@@ -4,3 +4,7 @@ numpy>=1.24
 # Optional: TLS root certificates for downloading the historical results CSV
 # on macOS Python builds that ship without a usable CA bundle.
 certifi
+
+# Streamlit dashboard (`streamlit run dashboard.py`).
+streamlit>=1.30
+pandas>=2.0
