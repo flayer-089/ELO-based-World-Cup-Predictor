@@ -1,4 +1,4 @@
-# World Cup Oracle — Terminal Edition
+# World Cup Oracle 
 
 A dependency-free Python CLI that predicts the 2026 FIFA World Cup.
 
